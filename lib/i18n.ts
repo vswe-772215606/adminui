@@ -74,6 +74,7 @@ export const t = {
   averageDuration: "Ўртача давомийлик",
   byKassa: "Касса бўйича",
   byGroup: "Гуруҳ бўйича",
+  paymentStatus: "Тўлов ҳолати",
   hoursTotal: "Жами соатлар",
   carsUnit: "машина",
 };

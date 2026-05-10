@@ -24,10 +24,11 @@ import {
   market,
   type GroupId,
 } from "@/data/market";
-import { toneClasses } from "@/lib/tones";
+import { toneClasses, toneHex, brandBlue, brandBlueAccent } from "@/lib/tones";
 import { formatUzs } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Donut } from "@/components/charts/donut";
 
 const periods: { id: Period; label: string }[] = [
   { id: "today", label: t.today },
@@ -125,42 +126,65 @@ export function ReportsView() {
         />
       </section>
 
-      <section className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <section className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium tracking-tight text-zinc-700 dark:text-zinc-300 uppercase">
+              {t.paymentStatus}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-4">
+            <Donut
+              segments={[
+                { key: "paid", label: t.paidRevenue, value: totals.paidRevenue, color: brandBlue },
+                { key: "pending", label: t.pendingRevenue, value: totals.pendingRevenue, color: brandBlueAccent },
+              ]}
+              centerTop={formatUzs(totals.totalRevenue)}
+              centerBottom={t.uzs}
+            />
+            <ul className="w-full space-y-1.5">
+              <Legend label={t.paidRevenue} value={totals.paidRevenue} hint={`${totals.paidCount} ${t.carsUnit}`} color={brandBlue} />
+              <Legend label={t.pendingRevenue} value={totals.pendingRevenue} hint={`${totals.activeCount} ${t.carsUnit}`} color={brandBlueAccent} />
+            </ul>
+          </CardContent>
+        </Card>
+
         <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm">
           <CardHeader>
             <CardTitle className="text-sm font-medium tracking-tight text-zinc-700 dark:text-zinc-300 uppercase">
               {t.byKassa}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {kassas.map((k) => {
-              const kFins = byKassa[k.id] ?? [];
-              const kTotals = totalsOf(kFins);
-              const max = totals.totalRevenue || 1;
-              const pct = (kTotals.totalRevenue / max) * 100;
-              return (
-                <div key={k.id} className="space-y-1.5">
-                  <div className="flex items-baseline justify-between gap-3 text-sm">
-                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                      {k.name}
-                    </span>
-                    <span className="text-zinc-500 tabular-nums text-xs">
-                      {kTotals.carCount} {t.carsUnit}
-                    </span>
-                    <span className="ml-auto font-medium tabular-nums text-zinc-900 dark:text-zinc-100">
-                      {formatUzs(kTotals.totalRevenue)} {t.uzs}
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                    <div
-                      className="h-full bg-zinc-700 dark:bg-zinc-300"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-            {totals.carCount === 0 && <EmptyHint />}
+          <CardContent className="flex flex-col items-center gap-4">
+            <Donut
+              segments={kassas.map((k, i) => {
+                const kFins = byKassa[k.id] ?? [];
+                const kTotals = totalsOf(kFins);
+                return {
+                  key: k.id,
+                  label: k.name,
+                  value: kTotals.totalRevenue,
+                  color: i === 0 ? brandBlue : brandBlueAccent,
+                };
+              })}
+              centerTop={`${totals.carCount}`}
+              centerBottom={t.carsUnit}
+            />
+            <ul className="w-full space-y-1.5">
+              {kassas.map((k, i) => {
+                const kFins = byKassa[k.id] ?? [];
+                const kTotals = totalsOf(kFins);
+                return (
+                  <Legend
+                    key={k.id}
+                    label={k.name}
+                    value={kTotals.totalRevenue}
+                    hint={`${kTotals.carCount} ${t.carsUnit}`}
+                    color={i === 0 ? brandBlue : brandBlueAccent}
+                  />
+                );
+              })}
+            </ul>
           </CardContent>
         </Card>
 
@@ -170,40 +194,36 @@ export function ReportsView() {
               {t.byGroup}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {allGroups.map((g) => {
-              const gFins = byGroup[g.id as GroupId] ?? [];
-              const gTotals = totalsOf(gFins);
-              const max = totals.totalRevenue || 1;
-              const pct = (gTotals.totalRevenue / max) * 100;
-              const c = toneClasses[g.tone];
-              return (
-                <div key={g.id} className="space-y-1.5">
-                  <div className="flex items-baseline gap-3 text-sm">
-                    <span className={cn("h-2 w-2 rounded-full self-center shrink-0", c.dot)} />
-                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                      {g.name}
-                    </span>
-                    <span className="text-zinc-500 tabular-nums text-xs">
-                      {gTotals.carCount} {t.carsUnit}
-                    </span>
-                    <span className="text-zinc-400 tabular-nums text-xs">
-                      {formatUzs(hourlyRateUzs[g.id])}/{t.hour}
-                    </span>
-                    <span className="ml-auto font-medium tabular-nums text-zinc-900 dark:text-zinc-100">
-                      {formatUzs(gTotals.totalRevenue)} {t.uzs}
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                    <div
-                      className={cn("h-full", c.bar)}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-            {totals.carCount === 0 && <EmptyHint />}
+          <CardContent className="flex flex-col items-center gap-4">
+            <Donut
+              segments={allGroups.map((g) => {
+                const gFins = byGroup[g.id as GroupId] ?? [];
+                const gTotals = totalsOf(gFins);
+                return {
+                  key: g.id,
+                  label: g.name,
+                  value: gTotals.totalRevenue,
+                  color: toneHex[g.tone],
+                };
+              })}
+              centerTop={formatUzs(totals.totalRevenue)}
+              centerBottom={t.uzs}
+            />
+            <ul className="w-full space-y-1">
+              {allGroups.map((g) => {
+                const gFins = byGroup[g.id as GroupId] ?? [];
+                const gTotals = totalsOf(gFins);
+                return (
+                  <Legend
+                    key={g.id}
+                    label={g.name}
+                    value={gTotals.totalRevenue}
+                    hint={`${gTotals.carCount} ${t.carsUnit} · ${formatUzs(hourlyRateUzs[g.id])}/${t.hour}`}
+                    color={toneHex[g.tone]}
+                  />
+                );
+              })}
+            </ul>
           </CardContent>
         </Card>
       </section>
@@ -246,10 +266,12 @@ function BigStat({
             className={cn(
               "font-heading text-2xl font-semibold tabular-nums tracking-tight",
               accent === "paid"
-                ? "text-emerald-700 dark:text-emerald-400"
+                ? "text-blue-900 dark:text-blue-300"
                 : accent === "pending"
                   ? "text-amber-700 dark:text-amber-400"
-                  : "text-zinc-900 dark:text-zinc-50"
+                  : accent === "primary"
+                    ? "text-blue-900 dark:text-blue-300"
+                    : "text-zinc-900 dark:text-zinc-50"
             )}
           >
             {value}
@@ -271,6 +293,34 @@ function EmptyHint() {
     <div className="rounded-md border border-dashed border-zinc-200 dark:border-zinc-800 px-4 py-6 text-center text-sm text-zinc-500">
       —
     </div>
+  );
+}
+
+function Legend({
+  label,
+  value,
+  hint,
+  color,
+}: {
+  label: string;
+  value: number;
+  hint?: string;
+  color: string;
+}) {
+  return (
+    <li className="flex items-center gap-2 text-xs">
+      <span
+        className="inline-block h-2 w-2 rounded-full shrink-0"
+        style={{ backgroundColor: color }}
+      />
+      <span className="text-zinc-700 dark:text-zinc-300 font-medium">
+        {label}
+      </span>
+      {hint && <span className="text-zinc-500 truncate">{hint}</span>}
+      <span className="ml-auto tabular-nums font-medium text-zinc-900 dark:text-zinc-50">
+        {formatUzs(value)}
+      </span>
+    </li>
   );
 }
 

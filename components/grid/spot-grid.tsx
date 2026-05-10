@@ -58,29 +58,22 @@ export function SpotGrid({ kassa, highlightedSpot, onSpotClick }: SpotGridProps)
                 {band.rows.map((row) => (
                   <div
                     key={row.rowIndex}
-                    className="flex flex-wrap items-start gap-x-3 gap-y-1"
+                    className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-1"
                   >
-                    {row.cells.map((cell, ci) => (
-                      <div
-                        key={ci}
-                        className="flex flex-nowrap gap-1"
-                      >
-                        {cell.spots.map((spotNumber) => {
-                          const registration = hasHydrated
-                            ? getActiveBySpot(registrations, kassa.id, spotNumber)
-                            : undefined;
-                          return (
-                            <Spot
-                              key={spotNumber}
-                              number={spotNumber}
-                              registration={registration}
-                              highlighted={highlightedSpot === spotNumber}
-                              onClick={onSpotClick}
-                            />
-                          );
-                        })}
-                      </div>
-                    ))}
+                    {row.cells.flatMap((cell) => cell.spots).map((spotNumber) => {
+                      const registration = hasHydrated
+                        ? getActiveBySpot(registrations, kassa.id, spotNumber)
+                        : undefined;
+                      return (
+                        <Spot
+                          key={spotNumber}
+                          number={spotNumber}
+                          registration={registration}
+                          highlighted={highlightedSpot === spotNumber}
+                          onClick={onSpotClick}
+                        />
+                      );
+                    })}
                   </div>
                 ))}
               </div>

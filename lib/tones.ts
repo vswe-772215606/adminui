@@ -1,5 +1,18 @@
 import type { GroupTone } from "@/data/market";
 
+export const brandBlue = "#1e3a8a"; // Tailwind blue-900
+export const brandBlueSoft = "#1e40af"; // blue-800
+export const brandBlueAccent = "#2563eb"; // blue-600
+
+export const toneHex: Record<GroupTone, string> = {
+  amber: "#f59e0b",
+  blue: "#3b82f6",
+  rose: "#f43f5e",
+  sky: "#0ea5e9",
+  emerald: "#10b981",
+  violet: "#8b5cf6",
+};
+
 export const toneClasses: Record<
   GroupTone,
   {

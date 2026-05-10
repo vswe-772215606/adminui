@@ -65,7 +65,7 @@ export function Sidebar() {
                     className={cn(
                       "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
                       isActive
-                        ? "bg-zinc-200/70 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50"
+                        ? "bg-blue-900 text-white shadow-sm dark:bg-blue-800 dark:text-zinc-50"
                         : "text-zinc-600 hover:bg-zinc-200/40 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-50"
                     )}
                   >

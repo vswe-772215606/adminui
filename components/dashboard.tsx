@@ -198,7 +198,7 @@ function Stat({
             ? "text-emerald-700 dark:text-emerald-400"
             : tone === "occupied"
               ? "text-amber-700 dark:text-amber-400"
-              : "text-zinc-900 dark:text-zinc-50"
+              : "text-blue-900 dark:text-blue-300"
         )}
       >
         {value}
