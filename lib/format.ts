@@ -2,7 +2,7 @@ import { format, formatDistanceStrict } from "date-fns";
 import { uzCyrl } from "date-fns/locale/uz-Cyrl";
 
 export function formatUzs(amount: number): string {
-  return new Intl.NumberFormat("uz-UZ").format(amount);
+  return Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
 
 export function formatTime(ts: number): string {

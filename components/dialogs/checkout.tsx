@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useNow } from "@/lib/use-now";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -26,13 +26,7 @@ type Props = {
 
 export function CheckoutDialog({ registration, onClose, onConfirmed }: Props) {
   const checkout = useStore((s) => s.checkout);
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (!registration) return;
-    const interval = setInterval(() => setNow(Date.now()), 5_000);
-    return () => clearInterval(interval);
-  }, [registration]);
+  const now = useNow(5_000);
 
   if (!registration) {
     return (

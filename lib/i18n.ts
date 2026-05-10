@@ -57,6 +57,25 @@ export const t = {
   required: "Тўлдириш мажбурий",
   spotOccupied: "Жой банд",
   invalidSpot: "Жой топилмади",
+
+  // Reports
+  reports: "Ҳисобот",
+  financeReport: "Молиявий ҳисобот",
+  today: "Бугун",
+  thisWeek: "Бу ҳафта",
+  thisMonth: "Бу ой",
+  allTime: "Барча вақт",
+  totalRevenue: "Жами тушум",
+  paidRevenue: "Тўланган",
+  pendingRevenue: "Кутилмоқда",
+  carsServed: "Хизмат кўрсатилган",
+  carsActive: "Ҳозир турган",
+  averageBill: "Ўртача тўлов",
+  averageDuration: "Ўртача давомийлик",
+  byKassa: "Касса бўйича",
+  byGroup: "Гуруҳ бўйича",
+  hoursTotal: "Жами соатлар",
+  carsUnit: "машина",
 };
 
 export type Translations = typeof t;

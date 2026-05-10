@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ArrowRight } from "lucide-react";
+import { useNow } from "@/lib/use-now";
 import {
   Card,
   CardContent,
@@ -23,11 +24,7 @@ export function Dashboard() {
   const registrations = useStore((s) => s.registrations);
   const hasHydrated = useStore((s) => s.hasHydrated);
 
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(id);
-  }, []);
+  const now = useNow(60_000);
 
   const active = useMemo(
     () => (hasHydrated ? getActive(registrations) : []),

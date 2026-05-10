@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useNow } from "@/lib/use-now";
 import {
   Tabs,
   TabsContent,
@@ -39,12 +40,7 @@ export function CarsView() {
 
   const [filter, setFilter] = useState<KassaFilter>("all");
   const [selected, setSelected] = useState<Registration | null>(null);
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 30_000);
-    return () => clearInterval(id);
-  }, []);
+  const now = useNow(30_000);
 
   const active = useMemo(
     () => (hasHydrated ? getActive(registrations) : []),

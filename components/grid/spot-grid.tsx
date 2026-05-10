@@ -33,8 +33,8 @@ export function SpotGrid({ kassa, highlightedSpot, onSpotClick }: SpotGridProps)
   );
 
   return (
-    <div className="overflow-x-auto pb-2">
-      <div className="space-y-5 w-max">
+    <div>
+      <div className="space-y-5">
         {bands.map((band, idx) => {
           const showGroupLabel = labelFlags[idx];
           const group = kassa.groups.find((g) => g.id === band.groupId);
@@ -58,7 +58,7 @@ export function SpotGrid({ kassa, highlightedSpot, onSpotClick }: SpotGridProps)
                 {band.rows.map((row) => (
                   <div
                     key={row.rowIndex}
-                    className="flex items-center gap-3"
+                    className="flex flex-wrap items-start gap-x-3 gap-y-1"
                   >
                     {row.cells.map((cell, ci) => (
                       <div

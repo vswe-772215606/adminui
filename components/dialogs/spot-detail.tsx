@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useNow } from "@/lib/use-now";
 import {
   Dialog,
   DialogContent,
@@ -24,14 +25,8 @@ type Props = {
 };
 
 export function SpotDetailDialog({ registration, onClose }: Props) {
-  const [now, setNow] = useState(() => Date.now());
+  const now = useNow(30_000);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-
-  useEffect(() => {
-    if (!registration || registration.exitedAt) return;
-    const interval = setInterval(() => setNow(Date.now()), 30_000);
-    return () => clearInterval(interval);
-  }, [registration]);
 
   const open = registration !== null;
 

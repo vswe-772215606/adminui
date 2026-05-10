@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Car, Building2 } from "lucide-react";
+import { LayoutGrid, Car, Building2, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { getAllKassas } from "@/data/market";
@@ -32,6 +32,11 @@ export function Sidebar() {
       href: "/cars",
       label: t.cars,
       icon: <Car className="h-4 w-4" strokeWidth={1.5} />,
+    },
+    {
+      href: "/reports",
+      label: t.reports,
+      icon: <BarChart3 className="h-4 w-4" strokeWidth={1.5} />,
     },
   ];
 
