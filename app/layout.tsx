@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Hydration } from "@/components/hydration";
@@ -15,6 +15,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const manrope = Manrope({
+  variable: "--font-heading",
+  subsets: ["latin", "cyrillic"],
+  weight: ["500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Авто бозор — Бошқарув",
   description: "Авто бозор кассаси учун бошқарув панели",
@@ -28,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="uz"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background text-foreground">
         <Hydration />

@@ -14,6 +14,8 @@ import {
   type Registration,
   useStore,
 } from "@/lib/store";
+import { toneClasses } from "@/lib/tones";
+import { cn } from "@/lib/utils";
 
 type SpotGridProps = {
   kassa: Kassa;
@@ -36,12 +38,23 @@ export function SpotGrid({ kassa, highlightedSpot, onSpotClick }: SpotGridProps)
         {bands.map((band, idx) => {
           const showGroupLabel = labelFlags[idx];
           const group = kassa.groups.find((g) => g.id === band.groupId);
+          const tone = group ? toneClasses[group.tone] : null;
           return (
             <div key={band.bandIndex} className="space-y-2">
               {showGroupLabel && group && (
-                <GroupLabel name={group.name} spotRange={group.spotRange} />
+                <GroupLabel
+                  name={group.name}
+                  spotRange={group.spotRange}
+                  tone={group.tone}
+                />
               )}
-              <div className="space-y-1.5">
+              <div
+                className={cn(
+                  "rounded-md border p-3 space-y-1.5",
+                  tone?.softBg,
+                  tone?.softBorder
+                )}
+              >
                 {band.rows.map((row) => (
                   <div
                     key={row.rowIndex}

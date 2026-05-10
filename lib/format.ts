@@ -1,5 +1,5 @@
 import { format, formatDistanceStrict } from "date-fns";
-import { uz } from "date-fns/locale";
+import { uzCyrl } from "date-fns/locale/uz-Cyrl";
 
 export function formatUzs(amount: number): string {
   return new Intl.NumberFormat("uz-UZ").format(amount);
@@ -14,7 +14,7 @@ export function formatTimeShort(ts: number): string {
 }
 
 export function formatDuration(fromTs: number, toTs: number): string {
-  return formatDistanceStrict(toTs, fromTs, { locale: uz });
+  return formatDistanceStrict(toTs, fromTs, { locale: uzCyrl });
 }
 
 export function formatPlate(plate: string): string {

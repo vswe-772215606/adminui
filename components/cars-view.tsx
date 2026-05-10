@@ -68,7 +68,7 @@ export function CarsView() {
           <div className="text-xs uppercase tracking-wider text-zinc-500">
             {t.cars}
           </div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             {t.marketName}
           </h1>
         </div>

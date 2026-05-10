@@ -10,17 +10,9 @@ import { useStore, getActive, type Registration } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import { RegisterCarDialog } from "@/components/dialogs/register-car";
 import { SpotDetailDialog } from "@/components/dialogs/spot-detail";
+import { toneClasses } from "@/lib/tones";
 
 type Props = { kassaId: KassaId };
-
-const groupColors: Record<string, string> = {
-  biznes: "bg-zinc-700",
-  lacetti: "bg-zinc-400",
-  cobalt: "bg-zinc-700",
-  nexia3: "bg-zinc-500",
-  spark: "bg-zinc-400",
-  matiz: "bg-zinc-300",
-};
 
 export function KassaView({ kassaId }: Props) {
   const kassa = getKassa(kassaId)!;
@@ -75,7 +67,7 @@ export function KassaView({ kassaId }: Props) {
           <div className="text-xs uppercase tracking-wider text-zinc-500">
             {t.kassa}
           </div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             {kassa.name}
           </h1>
         </div>
@@ -88,21 +80,22 @@ export function KassaView({ kassaId }: Props) {
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
-          {kassa.groups.map((g) => (
-            <Badge
-              key={g.id}
-              variant="outline"
-              className="gap-2 border-zinc-200 dark:border-zinc-800 font-normal"
-            >
-              <span
-                className={`h-2 w-2 rounded-full ${groupColors[g.id] ?? "bg-zinc-400"}`}
-              />
-              <span className="text-zinc-700 dark:text-zinc-300">{g.name}</span>
-              <span className="text-zinc-500 tabular-nums">
-                {g.spotRange[0]}–{g.spotRange[1]}
-              </span>
-            </Badge>
-          ))}
+          {kassa.groups.map((g) => {
+            const c = toneClasses[g.tone];
+            return (
+              <Badge
+                key={g.id}
+                variant="outline"
+                className="gap-2 border-zinc-200 dark:border-zinc-800 font-normal"
+              >
+                <span className={`h-2 w-2 rounded-full ${c.dot}`} />
+                <span className="text-zinc-700 dark:text-zinc-300">{g.name}</span>
+                <span className="text-zinc-500 tabular-nums">
+                  {g.spotRange[0]}–{g.spotRange[1]}
+                </span>
+              </Badge>
+            );
+          })}
         </div>
         <div className="relative">
           <Search

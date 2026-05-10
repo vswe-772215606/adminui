@@ -16,6 +16,7 @@ import { formatTimeShort, formatUzs } from "@/lib/format";
 import { calculateBill, hourlyRateUzs } from "@/lib/pricing";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { toneClasses } from "@/lib/tones";
 
 export function Dashboard() {
   const kassas = getAllKassas();
@@ -52,7 +53,7 @@ export function Dashboard() {
           <div className="text-xs uppercase tracking-wider text-zinc-500">
             {t.dashboard}
           </div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             {t.marketName}
           </h1>
         </div>
@@ -76,7 +77,7 @@ export function Dashboard() {
                     <div className="text-[11px] uppercase tracking-wider text-zinc-500">
                       {t.kassa}
                     </div>
-                    <CardTitle className="mt-1 text-lg tracking-tight">
+                    <CardTitle className="mt-1 font-heading text-xl font-semibold tracking-tight">
                       {k.name}
                     </CardTitle>
                   </div>
@@ -98,15 +99,19 @@ export function Dashboard() {
                     />
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    {k.groups.map((g) => (
-                      <Badge
-                        key={g.id}
-                        variant="outline"
-                        className="border-zinc-200 dark:border-zinc-800 font-normal text-zinc-600 dark:text-zinc-400 text-[11px]"
-                      >
-                        {g.name}
-                      </Badge>
-                    ))}
+                    {k.groups.map((g) => {
+                      const c = toneClasses[g.tone];
+                      return (
+                        <Badge
+                          key={g.id}
+                          variant="outline"
+                          className="gap-1.5 border-zinc-200 dark:border-zinc-800 font-normal text-zinc-600 dark:text-zinc-400 text-[11px]"
+                        >
+                          <span className={cn("h-1.5 w-1.5 rounded-full", c.dot)} />
+                          {g.name}
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>

@@ -8,10 +8,19 @@ export type GroupId =
 
 export type KassaId = "kassa-1" | "kassa-2";
 
+export type GroupTone =
+  | "amber"
+  | "blue"
+  | "rose"
+  | "sky"
+  | "emerald"
+  | "violet";
+
 export type Group = {
   id: GroupId;
   name: string;
   spotRange: [number, number];
+  tone: GroupTone;
 };
 
 export type Row = {
@@ -57,8 +66,8 @@ export const market: Market = {
           name: "1-КАССА",
           totalSpots: 763,
           groups: [
-            { id: "biznes", name: "Бизнес класс", spotRange: [1, 534] },
-            { id: "lacetti", name: "Lacetti", spotRange: [535, 763] },
+            { id: "biznes", name: "Бизнес класс", spotRange: [1, 534], tone: "amber" },
+            { id: "lacetti", name: "Lacetti", spotRange: [535, 763], tone: "blue" },
           ],
           bands: [
             {
@@ -80,10 +89,10 @@ export const market: Market = {
           name: "2-КАССА",
           totalSpots: 608,
           groups: [
-            { id: "cobalt", name: "Cobalt", spotRange: [1, 228] },
-            { id: "nexia3", name: "Nexia 3", spotRange: [229, 380] },
-            { id: "spark", name: "Spark", spotRange: [381, 532] },
-            { id: "matiz", name: "Matiz", spotRange: [533, 608] },
+            { id: "cobalt", name: "Cobalt", spotRange: [1, 228], tone: "rose" },
+            { id: "nexia3", name: "Nexia 3", spotRange: [229, 380], tone: "sky" },
+            { id: "spark", name: "Spark", spotRange: [381, 532], tone: "violet" },
+            { id: "matiz", name: "Matiz", spotRange: [533, 608], tone: "emerald" },
           ],
           bands: [
             { groupId: "cobalt", rows: [standardRow()] },
