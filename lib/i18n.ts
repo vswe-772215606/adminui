@@ -22,6 +22,7 @@ export const t = {
   active: "Фаол",
   history: "Тарих",
   status: "Ҳолат",
+  overdue: "Кечиккан",
 
   // Registration
   registerCar: "Машина рўйхатдан ўтказиш",
@@ -127,6 +128,9 @@ export const t = {
   saved: "Сақланди",
   resetDefaults: "Стандартга қайтариш",
   ratesReset: "Тарифлар стандартга қайтарилди",
+  spotSettings: "Жой созламалари",
+  overdueThreshold: "Кечиккан чегараси",
+  overdueHint: "Шу муддатдан ошган жойлар қизил рангда белгиланади",
 };
 
 export type Translations = typeof t;

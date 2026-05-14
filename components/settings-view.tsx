@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
-import { Settings, Palette, Coins, Building2, Save, RotateCcw } from "lucide-react";
+import {
+  Settings,
+  Palette,
+  Coins,
+  Building2,
+  Save,
+  RotateCcw,
+  TimerReset,
+} from "lucide-react";
 import {
   PageShell,
   PageHeader,
@@ -41,6 +49,7 @@ export function SettingsView() {
 
       <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
         <AppearanceCard />
+        <SpotSettingsCard />
         <MarketInfoCard />
         <RatesCard
           rates={rates}
@@ -91,6 +100,56 @@ function AppearanceCard() {
           ) : (
             <div className="h-8 w-44 rounded-lg bg-muted" />
           )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+function SpotSettingsCard() {
+  const overdueHours = useSettings((s) => s.overdueHours);
+  const setOverdueHours = useSettings((s) => s.setOverdueHours);
+  const [draft, setDraft] = useState(String(overdueHours));
+
+  function commit() {
+    const clamped = Math.min(72, Math.max(1, Math.round(Number(draft) || 1)));
+    setOverdueHours(clamped);
+    setDraft(String(clamped));
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-sm uppercase tracking-tight text-foreground/80">
+          <TimerReset className="size-4 text-muted-foreground" />
+          {t.spotSettings}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <div className="text-sm text-foreground">{t.overdueThreshold}</div>
+            <p className="text-xs text-muted-foreground">{t.overdueHint}</p>
+          </div>
+          <div className="relative shrink-0">
+            <Input
+              inputMode="numeric"
+              value={draft}
+              onChange={(e) =>
+                setDraft(e.target.value.replace(/[^\d]/g, ""))
+              }
+              onBlur={commit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+              }}
+              className="w-24 pr-12 tabular-nums"
+            />
+            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+              {t.hour}
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>
