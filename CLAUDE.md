@@ -45,6 +45,12 @@ The app digitises a previously-manual workflow: register a car onto a spot → i
 
 **Live timers without hydration mismatch.** `lib/use-now.ts` (`useNow`) is a `useSyncExternalStore` hook with per-interval shared `setInterval` buckets. Its `getServerSnapshot` returns `0`, so SSR and first client render agree — callers treat `0` as "not yet known". `components/live-duration.tsx` (`LiveDuration`) wraps it for ticking elapsed counters. Convention: grid tiles tick coarse (60s), lists 30s, the car-detail hero and checkout dialog tick every second (`useNow(1000)`).
 
-**Styling.** Tailwind v4 (`@tailwindcss/postcss`, config in `app/globals.css`). shadcn-style primitives in `components/ui/`. Per-group color theming flows through `lib/tones.ts`: a `GroupTone` maps to both `toneHex` (for charts/SVG) and `toneClasses` (Tailwind class bundles with dark-mode variants). Add new tones in both places. Brand blue constants also live there.
+**Styling.** Tailwind v4 (`@tailwindcss/postcss`, config in `app/globals.css`). shadcn-style primitives in `components/ui/`.
+
+Colour is fully token-driven — **never write raw palette classes (`amber-500`, `emerald-600`) or `dark:` colour variants in feature code.** Every colour is a CSS variable in `app/globals.css` with light + dark values, registered in `@theme inline`:
+- *Semantic states* — `success` (free/paid), `warning` (occupied/pending), `danger` (overdue). Use as Tailwind tokens with opacity modifiers: `bg-warning/10 text-warning border-warning/30`. For charts/SVG/inline styles use `stateColor` from `lib/tones.ts` (CSS-var refs).
+- *Categorical group tones* — one `--tone-*` per car group. `lib/tones.ts` exposes `toneClasses` (uniform literal class bundles — Tailwind needs literals) and `toneColor` (var refs for charts). Adding a tone = add the CSS vars + `@theme` mapping + a `toneClasses`/`toneColor` entry, all following the existing pattern.
+
+Radius scale: `rounded-xl` cards/dialogs/sheets/popovers, `rounded-lg` buttons/inputs/tiles/segmented, `rounded-md` small inner bits, `rounded-full` dots/pills — all derive from `--radius`.
 
 **State libraries:** `zustand` for app state, `next-themes` for dark mode, `sonner` for toasts (`<Toaster />` in layout), `base-ui` + `lucide-react` for primitives/icons.

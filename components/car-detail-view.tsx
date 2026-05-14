@@ -105,14 +105,14 @@ export function CarDetailView({ registrationId }: { registrationId: string }) {
               className={cn(
                 "gap-1.5 font-medium",
                 isActive
-                  ? "border-amber-300 text-amber-700 dark:border-amber-900/50 dark:text-amber-300"
-                  : "border-emerald-300 text-emerald-700 dark:border-emerald-900/50 dark:text-emerald-300"
+                  ? "border-warning/40 text-warning"
+                  : "border-success/40 text-success"
               )}
             >
               <span
                 className={cn(
                   "size-1.5 rounded-full",
-                  isActive ? "bg-amber-500" : "bg-emerald-500"
+                  isActive ? "bg-warning" : "bg-success"
                 )}
               />
               {isActive ? t.active : t.paid}

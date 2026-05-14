@@ -171,7 +171,6 @@ function MarketInfoCard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
-        <InfoRow label={t.marketName}>{t.marketCity}</InfoRow>
         <InfoRow label={t.kassas}>
           <span className="tabular-nums">{kassas.length}</span>
         </InfoRow>

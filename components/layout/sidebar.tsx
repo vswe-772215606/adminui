@@ -71,11 +71,11 @@ export function SidebarBody({
       >
         {!collapsed && (
           <div className="min-w-0 flex-1 pl-1.5">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            <div className="truncate font-heading text-sm font-semibold tracking-tight text-foreground">
               {t.marketName}
             </div>
-            <div className="truncate font-heading text-sm font-semibold tracking-tight text-foreground">
-              {t.marketCity}
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              {t.dashboard}
             </div>
           </div>
         )}

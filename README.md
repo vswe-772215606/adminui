@@ -1,6 +1,6 @@
-# Авто бозор — Бошқарув
+# Click Avto — Бошқарув
 
-Standalone admin UI for the Kokand car market with two cashier zones
+Standalone admin UI for a car market with two cashier zones
 (1-КАССА, 2-КАССА). Faithful visual layout of the physical lot: register
 and check out cars, track active/historical registrations, view finance
 reports. Digitises a previously fully-manual workflow. All state in

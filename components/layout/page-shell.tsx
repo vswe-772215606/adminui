@@ -74,8 +74,8 @@ export function PageHeader({
 const statTone = {
   default: "text-foreground",
   primary: "text-primary",
-  free: "text-emerald-600 dark:text-emerald-400",
-  occupied: "text-amber-600 dark:text-amber-400",
+  free: "text-success",
+  occupied: "text-warning",
 } as const;
 
 export function Stat({

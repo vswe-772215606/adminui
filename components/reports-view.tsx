@@ -25,7 +25,7 @@ import {
   type RegistrationFinance,
 } from "@/lib/finance";
 import { getAllKassas, market, type GroupId } from "@/data/market";
-import { toneClasses, toneHex, brandBlue, brandBlueAccent } from "@/lib/tones";
+import { toneClasses, toneColor, stateColor } from "@/lib/tones";
 import { formatUzs } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -130,13 +130,13 @@ export function ReportsView() {
                 key: "paid",
                 label: t.paidRevenue,
                 value: totals.paidRevenue,
-                color: brandBlue,
+                color: stateColor.success,
               },
               {
                 key: "pending",
                 label: t.pendingRevenue,
                 value: totals.pendingRevenue,
-                color: brandBlueAccent,
+                color: stateColor.warning,
               },
             ]}
             centerTop={formatUzs(totals.totalRevenue)}
@@ -147,13 +147,13 @@ export function ReportsView() {
               label={t.paidRevenue}
               value={totals.paidRevenue}
               hint={`${totals.paidCount} ${t.carsUnit}`}
-              color={brandBlue}
+              color={stateColor.success}
             />
             <Legend
               label={t.pendingRevenue}
               value={totals.pendingRevenue}
               hint={`${totals.activeCount} ${t.carsUnit}`}
-              color={brandBlueAccent}
+              color={stateColor.warning}
             />
           </ul>
         </ChartCard>
@@ -166,7 +166,7 @@ export function ReportsView() {
                 key: k.id,
                 label: k.name,
                 value: kTotals.totalRevenue,
-                color: i === 0 ? brandBlue : brandBlueAccent,
+                color: i === 0 ? toneColor.blue : toneColor.sky,
               };
             })}
             centerTop={`${totals.carCount}`}
@@ -181,7 +181,7 @@ export function ReportsView() {
                   label={k.name}
                   value={kTotals.totalRevenue}
                   hint={`${kTotals.carCount} ${t.carsUnit}`}
-                  color={i === 0 ? brandBlue : brandBlueAccent}
+                  color={i === 0 ? toneColor.blue : toneColor.sky}
                 />
               );
             })}
@@ -196,7 +196,7 @@ export function ReportsView() {
                 key: g.id,
                 label: g.name,
                 value: gTotals.totalRevenue,
-                color: toneHex[g.tone],
+                color: toneColor[g.tone],
               };
             })}
             centerTop={formatUzs(totals.totalRevenue)}
@@ -211,7 +211,7 @@ export function ReportsView() {
                   label={g.name}
                   value={gTotals.totalRevenue}
                   hint={`${gTotals.carCount} ${t.carsUnit}`}
-                  color={toneHex[g.tone]}
+                  color={toneColor[g.tone]}
                 />
               );
             })}
@@ -229,8 +229,11 @@ export function ReportsView() {
               </span>
             </CardTitle>
             <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-              <ChartLegend color={brandBlue} label={t.paidRevenue} />
-              <ChartLegend color={brandBlueAccent} label={t.pendingRevenue} />
+              <ChartLegend color={stateColor.success} label={t.paidRevenue} />
+              <ChartLegend
+                color={stateColor.warning}
+                label={t.pendingRevenue}
+              />
             </div>
           </CardHeader>
           <CardContent>
@@ -240,8 +243,12 @@ export function ReportsView() {
                 label: b.label,
                 highlight: i === week.length - 1,
                 segments: [
-                  { key: "paid", value: b.paid, color: brandBlue },
-                  { key: "pending", value: b.pending, color: brandBlueAccent },
+                  { key: "paid", value: b.paid, color: stateColor.success },
+                  {
+                    key: "pending",
+                    value: b.pending,
+                    color: stateColor.warning,
+                  },
                 ],
               }))}
               formatTotal={(total) => `${formatUzs(total)} ${t.uzs}`}
@@ -262,7 +269,7 @@ export function ReportsView() {
               bars={hours.map((h) => ({
                 label: h.hour % 3 === 0 ? String(h.hour).padStart(2, "0") : "",
                 segments: [
-                  { key: "count", value: h.count, color: brandBlueAccent },
+                  { key: "count", value: h.count, color: "var(--primary)" },
                 ],
               }))}
               formatTotal={(total) => `${total} ${t.carsUnit}`}
@@ -330,10 +337,12 @@ function BigStat({
             className={cn(
               "font-heading text-xl font-semibold tabular-nums tracking-tight sm:text-2xl",
               accent === "pending"
-                ? "text-amber-600 dark:text-amber-400"
-                : accent === "paid" || accent === "primary"
-                  ? "text-primary"
-                  : "text-foreground"
+                ? "text-warning"
+                : accent === "paid"
+                  ? "text-success"
+                  : accent === "primary"
+                    ? "text-primary"
+                    : "text-foreground"
             )}
           >
             {value}
@@ -447,8 +456,8 @@ function RegistrationsTable({ fins }: { fins: RegistrationFinance[] }) {
                     className={cn(
                       "font-normal",
                       f.paid
-                        ? "border-emerald-300 text-emerald-700 dark:border-emerald-900/50 dark:text-emerald-300"
-                        : "border-amber-300 text-amber-700 dark:border-amber-900/50 dark:text-amber-300"
+                        ? "border-success/40 text-success"
+                        : "border-warning/40 text-warning"
                     )}
                   >
                     {f.paid ? t.paid : t.active}

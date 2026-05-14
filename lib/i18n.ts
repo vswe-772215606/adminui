@@ -1,7 +1,6 @@
 export const t = {
   // Brand / nav
-  marketName: "Авто бозор",
-  marketCity: "Қўқон шаҳри",
+  marketName: "Click Avto",
   dashboard: "Бошқарув панели",
   cars: "Машиналар",
   sector: "Сектор",
@@ -97,7 +96,7 @@ export const t = {
   carsUnit: "машина",
   revenueTrend: "Тушум динамикаси",
   last7Days: "Сўнгги 7 кун",
-  peakHours: "Жадал соатлар",
+  peakHours: "Пик вақтлар",
   entriesByHour: "Соат бўйича кирувлар",
   vsYesterday: "кеча",
   entries: "Кирувлар",

@@ -37,7 +37,7 @@ import { formatTimeShort, formatUzs } from "@/lib/format";
 import { calculateBill } from "@/lib/pricing";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { toneClasses, brandBlue, brandBlueAccent } from "@/lib/tones";
+import { toneClasses, stateColor } from "@/lib/tones";
 
 export function Dashboard() {
   const kassas = getAllKassas();
@@ -81,7 +81,7 @@ export function Dashboard() {
     <PageShell>
       <PageHeader
         eyebrow={t.dashboard}
-        title={t.marketCity}
+        title={t.marketName}
         icon={<LayoutGrid />}
         actions={
           <StatGroup>
@@ -203,7 +203,7 @@ export function Dashboard() {
             label={t.paidRevenue}
             value={formatUzs(todayTotals.paidRevenue)}
             hint={`${todayTotals.paidCount} ${t.carsUnit}`}
-            accent="primary"
+            accent="paid"
             series={week.map((b) => b.paid)}
           />
           <FinanceStat
@@ -230,8 +230,8 @@ export function Dashboard() {
               </span>
             </CardTitle>
             <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-              <LegendDot color={brandBlue} label={t.paidRevenue} />
-              <LegendDot color={brandBlueAccent} label={t.pendingRevenue} />
+              <LegendDot color={stateColor.success} label={t.paidRevenue} />
+              <LegendDot color={stateColor.warning} label={t.pendingRevenue} />
             </div>
           </CardHeader>
           <CardContent>
@@ -241,8 +241,12 @@ export function Dashboard() {
                 label: b.label,
                 highlight: i === week.length - 1,
                 segments: [
-                  { key: "paid", value: b.paid, color: brandBlue },
-                  { key: "pending", value: b.pending, color: brandBlueAccent },
+                  { key: "paid", value: b.paid, color: stateColor.success },
+                  {
+                    key: "pending",
+                    value: b.pending,
+                    color: stateColor.warning,
+                  },
                 ],
               }))}
               formatTotal={(total) => `${formatUzs(total)} ${t.uzs}`}
@@ -320,16 +324,18 @@ function FinanceStat({
   label: string;
   value: string;
   hint?: string;
-  accent?: "primary" | "pending";
+  accent?: "primary" | "paid" | "pending";
   /** 7-day series for this metric, oldest → newest. */
   series?: number[];
 }) {
   const accentText =
     accent === "primary"
       ? "text-primary"
-      : accent === "pending"
-        ? "text-amber-600 dark:text-amber-400"
-        : "text-muted-foreground";
+      : accent === "paid"
+        ? "text-success"
+        : accent === "pending"
+          ? "text-warning"
+          : "text-muted-foreground";
 
   const curr = series?.at(-1) ?? 0;
   const prev = series?.at(-2) ?? 0;
@@ -361,9 +367,7 @@ function FinanceStat({
             <span
               className={cn(
                 "flex items-center gap-0.5 font-medium tabular-nums",
-                diff >= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
+                diff >= 0 ? "text-success" : "text-danger"
               )}
             >
               {diff >= 0 ? (

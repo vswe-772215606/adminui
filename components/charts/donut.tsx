@@ -48,7 +48,7 @@ export function Donut({
         <circle
           r={RADIUS}
           fill="none"
-          className="stroke-zinc-100 dark:stroke-zinc-800"
+          className="stroke-muted"
           strokeWidth={STROKE}
         />
         {denom > 0 &&
@@ -62,7 +62,8 @@ export function Donut({
                 key={s.key}
                 r={RADIUS}
                 fill="none"
-                stroke={s.color}
+                // `style` (not the attribute) so CSS var colors resolve.
+                style={{ stroke: s.color }}
                 strokeWidth={STROKE}
                 strokeDasharray={dasharray}
                 strokeDashoffset={dashoffset}
@@ -73,12 +74,12 @@ export function Donut({
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         {centerTop && (
-          <span className="font-heading text-lg font-semibold tabular-nums tracking-tight text-zinc-900 dark:text-zinc-50">
+          <span className="font-heading text-lg font-semibold tabular-nums tracking-tight text-foreground">
             {centerTop}
           </span>
         )}
         {centerBottom && (
-          <span className="text-[10px] uppercase tracking-wider text-zinc-500">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
             {centerBottom}
           </span>
         )}

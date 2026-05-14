@@ -187,14 +187,8 @@ export function KassaView({ kassaId }: Props) {
 function StatusLegend() {
   const items = [
     { label: t.free, className: "border-border bg-card" },
-    {
-      label: t.occupied,
-      className: "border-amber-300 bg-amber-200 dark:border-amber-800 dark:bg-amber-900/60",
-    },
-    {
-      label: t.overdue,
-      className: "border-rose-300 bg-rose-200 dark:border-rose-800 dark:bg-rose-900/60",
-    },
+    { label: t.occupied, className: "border-warning/40 bg-warning/25" },
+    { label: t.overdue, className: "border-danger/40 bg-danger/25" },
   ];
   return (
     <div className="flex items-center gap-3">
@@ -229,12 +223,15 @@ function SpotPeek({
   const bill = calculateBill(group.id, registration.enteredAt, ref, rates);
 
   return (
-    <div className="w-60 space-y-3">
+    <div className="w-60 max-w-[calc(100vw-2rem)] space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-sm font-semibold uppercase tabular-nums text-foreground">
+        <span className="min-w-0 truncate font-mono text-sm font-semibold uppercase tabular-nums text-foreground">
           {registration.plate}
         </span>
-        <Badge variant="outline" className="gap-1.5 font-normal">
+        <Badge
+          variant="outline"
+          className="shrink-0 gap-1.5 font-normal"
+        >
           <span className={cn("size-1.5 rounded-full", tone.dot)} />
           {group.name}
         </Badge>
@@ -292,9 +289,11 @@ function PeekRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right text-foreground">{children}</span>
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <span className="min-w-0 truncate text-right text-foreground">
+        {children}
+      </span>
     </div>
   );
 }
