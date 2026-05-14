@@ -1,10 +1,14 @@
 export const t = {
   // Brand / nav
   marketName: "Авто бозор",
+  marketCity: "Қўқон шаҳри",
   dashboard: "Бошқарув панели",
   cars: "Машиналар",
   sector: "Сектор",
   kassa: "Касса",
+  menu: "Меню",
+  collapseSidebar: "Менюни йиғиш",
+  expandSidebar: "Менюни ёйиш",
 
   // Stats
   total: "Жами",
@@ -12,13 +16,16 @@ export const t = {
   occupied: "Банд",
   spots: "Жойлар",
   spot: "Жой",
+  occupancy: "Бандлик",
 
   // Statuses
   active: "Фаол",
   history: "Тарих",
+  status: "Ҳолат",
 
   // Registration
   registerCar: "Машина рўйхатдан ўтказиш",
+  registerNew: "Янги машина",
   plate: "Давлат рақами",
   owner: "Эга",
   phone: "Телефон",
@@ -26,20 +33,27 @@ export const t = {
   cancel: "Бекор қилиш",
   search: "Изла",
   searchSpotPlaceholder: "Жой рақами",
+  viewDetails: "Батафсил",
 
   // Detail / checkout
   spotDetail: "Жой маълумоти",
+  carDetail: "Машина маълумоти",
   checkOut: "Чиқариш",
   entryTime: "Кириш вақти",
   exitTime: "Чиқиш вақти",
   duration: "Давомийлик",
+  elapsed: "Ўтган вақт",
   payment: "Тўлов",
+  paid: "Тўланган",
   currentBill: "Жорий тўлов",
+  liveBill: "Жонли ҳисоб",
   hour: "соат",
   uzs: "сўм",
   perHour: "соатига",
   rate: "Тариф",
   group: "Гуруҳ",
+  back: "Орқага",
+  openInGrid: "Тўрда очиш",
 
   // Lists
   recentRegistrations: "Сўнгги рўйхатдан ўтганлар",
@@ -57,6 +71,9 @@ export const t = {
   required: "Тўлдириш мажбурий",
   spotOccupied: "Жой банд",
   invalidSpot: "Жой топилмади",
+  carNotFound: "Машина топилмади",
+  plateHint: "Масалан: 01 A 123 BC",
+  phoneHint: "Масалан: +998 90 123 45 67",
 
   // Reports
   reports: "Ҳисобот",
@@ -77,6 +94,39 @@ export const t = {
   paymentStatus: "Тўлов ҳолати",
   hoursTotal: "Жами соатлар",
   carsUnit: "машина",
+  revenueTrend: "Тушум динамикаси",
+  last7Days: "Сўнгги 7 кун",
+  peakHours: "Жадал соатлар",
+  entriesByHour: "Соат бўйича кирувлар",
+  vsYesterday: "кеча",
+  entries: "Кирувлар",
+
+  // Auth
+  login: "Кириш",
+  loginSubtitle: "Бошқарув панелига кириш учун маълумотларни киритинг",
+  username: "Фойдаланувчи",
+  password: "Парол",
+  signIn: "Тизимга кириш",
+  logout: "Чиқиш",
+  wrongCredentials: "Логин ёки парол хато",
+  usernamePlaceholder: "admin",
+
+  // Settings
+  settings: "Созламалар",
+  settingsSubtitle: "Тарифлар ва кўриниш созламалари",
+  rates: "Тарифлар",
+  ratesHint: "Ҳар бир гуруҳ учун соатлик тариф (сўм)",
+  appearance: "Кўриниш",
+  theme: "Мавзу",
+  themeLight: "Ёруғ",
+  themeDark: "Қоронғи",
+  themeSystem: "Тизим",
+  marketInfo: "Бозор маълумоти",
+  kassas: "Кассалар",
+  groups: "Гуруҳлар",
+  saved: "Сақланди",
+  resetDefaults: "Стандартга қайтариш",
+  ratesReset: "Тарифлар стандартга қайтарилди",
 };
 
 export type Translations = typeof t;

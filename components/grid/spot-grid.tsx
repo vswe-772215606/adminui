@@ -50,7 +50,7 @@ export function SpotGrid({ kassa, highlightedSpot, onSpotClick }: SpotGridProps)
               )}
               <div
                 className={cn(
-                  "rounded-md border p-3 space-y-1.5",
+                  "space-y-2 rounded-xl border p-3 sm:p-4",
                   tone?.softBg,
                   tone?.softBorder
                 )}
@@ -58,7 +58,7 @@ export function SpotGrid({ kassa, highlightedSpot, onSpotClick }: SpotGridProps)
                 {band.rows.map((row) => (
                   <div
                     key={row.rowIndex}
-                    className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-1"
+                    className="grid grid-cols-[repeat(auto-fill,minmax(3.25rem,1fr))] gap-1.5 sm:grid-cols-[repeat(auto-fill,minmax(3.5rem,1fr))] sm:gap-2"
                   >
                     {row.cells.flatMap((cell) => cell.spots).map((spotNumber) => {
                       const registration = hasHydrated

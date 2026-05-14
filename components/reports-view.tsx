@@ -1,46 +1,52 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { BarChart3, Inbox } from "lucide-react";
 import { useNow } from "@/lib/use-now";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  PageShell,
+  PageHeader,
+  SegmentedControl,
+  SectionTitle,
+  EmptyState,
+} from "@/components/layout/page-shell";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useStore } from "@/lib/store";
+import { useRates } from "@/lib/settings-store";
 import {
   computeFinance,
   inPeriod,
   totalsOf,
   groupBy,
+  dailyBuckets,
+  hourlyBuckets,
   type Period,
   type RegistrationFinance,
 } from "@/lib/finance";
-import { hourlyRateUzs } from "@/lib/pricing";
-import {
-  getAllKassas,
-  market,
-  type GroupId,
-} from "@/data/market";
+import { getAllKassas, market, type GroupId } from "@/data/market";
 import { toneClasses, toneHex, brandBlue, brandBlueAccent } from "@/lib/tones";
 import { formatUzs } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Donut } from "@/components/charts/donut";
+import { BarsChart } from "@/components/charts/bars-chart";
 
-const periods: { id: Period; label: string }[] = [
-  { id: "today", label: t.today },
-  { id: "week", label: t.thisWeek },
-  { id: "month", label: t.thisMonth },
-  { id: "all", label: t.allTime },
+const periods: { value: Period; label: string }[] = [
+  { value: "today", label: t.today },
+  { value: "week", label: t.thisWeek },
+  { value: "month", label: t.thisMonth },
+  { value: "all", label: t.allTime },
 ];
+
+const allGroups = market.sectors
+  .flatMap((s) => s.kassas)
+  .flatMap((k) => k.groups);
 
 export function ReportsView() {
   const registrations = useStore((s) => s.registrations);
   const hasHydrated = useStore((s) => s.hasHydrated);
-
+  const rates = useRates();
   const now = useNow(60_000);
 
   const [period, setPeriod] = useState<Period>("today");
@@ -48,9 +54,9 @@ export function ReportsView() {
   const fins = useMemo<RegistrationFinance[]>(() => {
     if (!hasHydrated) return [];
     return registrations
-      .map((r) => computeFinance(r, now))
+      .map((r) => computeFinance(r, now, rates))
       .filter((f): f is RegistrationFinance => f !== null);
-  }, [registrations, hasHydrated, now]);
+  }, [registrations, hasHydrated, now, rates]);
 
   const periodFins = useMemo(
     () => fins.filter((f) => inPeriod(f, period, now)),
@@ -58,46 +64,36 @@ export function ReportsView() {
   );
 
   const totals = useMemo(() => totalsOf(periodFins), [periodFins]);
-
-  const byKassa = useMemo(() => groupBy(periodFins, (f) => f.kassaId), [periodFins]);
-  const byGroup = useMemo(() => groupBy(periodFins, (f) => f.groupId), [periodFins]);
-
-  const kassas = getAllKassas();
-  const allGroups = market.sectors.flatMap((s) =>
-    s.kassas.flatMap((k) => k.groups)
+  const byKassa = useMemo(
+    () => groupBy(periodFins, (f) => f.kassaId),
+    [periodFins]
+  );
+  const byGroup = useMemo(
+    () => groupBy(periodFins, (f) => f.groupId),
+    [periodFins]
   );
 
-  return (
-    <div className="px-8 py-6 max-w-[1400px]">
-      <header className="flex items-end justify-between gap-6 pb-5 border-b border-zinc-200 dark:border-zinc-800">
-        <div>
-          <div className="text-xs uppercase tracking-wider text-zinc-500">
-            {t.reports}
-          </div>
-          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {t.financeReport}
-          </h1>
-        </div>
-        <div className="flex items-center gap-1 rounded-md border border-zinc-200 dark:border-zinc-800 p-0.5 bg-zinc-50 dark:bg-zinc-900">
-          {periods.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setPeriod(p.id)}
-              className={cn(
-                "rounded-[5px] px-3 py-1 text-xs font-medium transition-colors",
-                period === p.id
-                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-50"
-                  : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </header>
+  const week = useMemo(() => dailyBuckets(fins, 7, now), [fins, now]);
+  const hours = useMemo(() => hourlyBuckets(periodFins), [periodFins]);
 
-      <section className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  const kassas = getAllKassas();
+
+  return (
+    <PageShell>
+      <PageHeader
+        eyebrow={t.reports}
+        title={t.financeReport}
+        icon={<BarChart3 />}
+        actions={
+          <SegmentedControl
+            value={period}
+            onChange={setPeriod}
+            options={periods}
+          />
+        }
+      />
+
+      <section className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <BigStat
           label={t.totalRevenue}
           value={formatUzs(totals.totalRevenue)}
@@ -122,123 +118,191 @@ export function ReportsView() {
           label={t.averageBill}
           value={formatUzs(totals.averageBill)}
           unit={t.uzs}
-          hint={`${totals.carCount} ${t.carsUnit}, ${totals.totalHours} ${t.hour}`}
+          hint={`${totals.carCount} ${t.carsUnit} · ${totals.totalHours} ${t.hour}`}
         />
       </section>
 
-      <section className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium tracking-tight text-zinc-700 dark:text-zinc-300 uppercase">
-              {t.paymentStatus}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <Donut
-              segments={[
-                { key: "paid", label: t.paidRevenue, value: totals.paidRevenue, color: brandBlue },
-                { key: "pending", label: t.pendingRevenue, value: totals.pendingRevenue, color: brandBlueAccent },
-              ]}
-              centerTop={formatUzs(totals.totalRevenue)}
-              centerBottom={t.uzs}
+      <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <ChartCard title={t.paymentStatus}>
+          <Donut
+            segments={[
+              {
+                key: "paid",
+                label: t.paidRevenue,
+                value: totals.paidRevenue,
+                color: brandBlue,
+              },
+              {
+                key: "pending",
+                label: t.pendingRevenue,
+                value: totals.pendingRevenue,
+                color: brandBlueAccent,
+              },
+            ]}
+            centerTop={formatUzs(totals.totalRevenue)}
+            centerBottom={t.uzs}
+          />
+          <ul className="w-full space-y-1.5">
+            <Legend
+              label={t.paidRevenue}
+              value={totals.paidRevenue}
+              hint={`${totals.paidCount} ${t.carsUnit}`}
+              color={brandBlue}
             />
-            <ul className="w-full space-y-1.5">
-              <Legend label={t.paidRevenue} value={totals.paidRevenue} hint={`${totals.paidCount} ${t.carsUnit}`} color={brandBlue} />
-              <Legend label={t.pendingRevenue} value={totals.pendingRevenue} hint={`${totals.activeCount} ${t.carsUnit}`} color={brandBlueAccent} />
-            </ul>
+            <Legend
+              label={t.pendingRevenue}
+              value={totals.pendingRevenue}
+              hint={`${totals.activeCount} ${t.carsUnit}`}
+              color={brandBlueAccent}
+            />
+          </ul>
+        </ChartCard>
+
+        <ChartCard title={t.byKassa}>
+          <Donut
+            segments={kassas.map((k, i) => {
+              const kTotals = totalsOf(byKassa[k.id] ?? []);
+              return {
+                key: k.id,
+                label: k.name,
+                value: kTotals.totalRevenue,
+                color: i === 0 ? brandBlue : brandBlueAccent,
+              };
+            })}
+            centerTop={`${totals.carCount}`}
+            centerBottom={t.carsUnit}
+          />
+          <ul className="w-full space-y-1.5">
+            {kassas.map((k, i) => {
+              const kTotals = totalsOf(byKassa[k.id] ?? []);
+              return (
+                <Legend
+                  key={k.id}
+                  label={k.name}
+                  value={kTotals.totalRevenue}
+                  hint={`${kTotals.carCount} ${t.carsUnit}`}
+                  color={i === 0 ? brandBlue : brandBlueAccent}
+                />
+              );
+            })}
+          </ul>
+        </ChartCard>
+
+        <ChartCard title={t.byGroup}>
+          <Donut
+            segments={allGroups.map((g) => {
+              const gTotals = totalsOf(byGroup[g.id as GroupId] ?? []);
+              return {
+                key: g.id,
+                label: g.name,
+                value: gTotals.totalRevenue,
+                color: toneHex[g.tone],
+              };
+            })}
+            centerTop={formatUzs(totals.totalRevenue)}
+            centerBottom={t.uzs}
+          />
+          <ul className="w-full space-y-1">
+            {allGroups.map((g) => {
+              const gTotals = totalsOf(byGroup[g.id as GroupId] ?? []);
+              return (
+                <Legend
+                  key={g.id}
+                  label={g.name}
+                  value={gTotals.totalRevenue}
+                  hint={`${gTotals.carCount} ${t.carsUnit}`}
+                  color={toneHex[g.tone]}
+                />
+              );
+            })}
+          </ul>
+        </ChartCard>
+      </section>
+
+      <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between gap-3">
+            <CardTitle className="text-sm uppercase tracking-tight text-foreground/80">
+              {t.revenueTrend}
+              <span className="ml-1.5 font-sans text-xs font-normal normal-case tracking-normal text-muted-foreground">
+                {t.last7Days}
+              </span>
+            </CardTitle>
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+              <ChartLegend color={brandBlue} label={t.paidRevenue} />
+              <ChartLegend color={brandBlueAccent} label={t.pendingRevenue} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <BarsChart
+              height={160}
+              bars={week.map((b, i) => ({
+                label: b.label,
+                highlight: i === week.length - 1,
+                segments: [
+                  { key: "paid", value: b.paid, color: brandBlue },
+                  { key: "pending", value: b.pending, color: brandBlueAccent },
+                ],
+              }))}
+              formatTotal={(total) => `${formatUzs(total)} ${t.uzs}`}
+            />
           </CardContent>
         </Card>
 
-        <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium tracking-tight text-zinc-700 dark:text-zinc-300 uppercase">
-              {t.byKassa}
+            <CardTitle className="text-sm uppercase tracking-tight text-foreground/80">
+              {t.peakHours}
             </CardTitle>
+            <p className="text-xs text-muted-foreground">{t.entriesByHour}</p>
           </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <Donut
-              segments={kassas.map((k, i) => {
-                const kFins = byKassa[k.id] ?? [];
-                const kTotals = totalsOf(kFins);
-                return {
-                  key: k.id,
-                  label: k.name,
-                  value: kTotals.totalRevenue,
-                  color: i === 0 ? brandBlue : brandBlueAccent,
-                };
-              })}
-              centerTop={`${totals.carCount}`}
-              centerBottom={t.carsUnit}
+          <CardContent>
+            <BarsChart
+              height={160}
+              bars={hours.map((h) => ({
+                label: h.hour % 3 === 0 ? String(h.hour).padStart(2, "0") : "",
+                segments: [
+                  { key: "count", value: h.count, color: brandBlueAccent },
+                ],
+              }))}
+              formatTotal={(total) => `${total} ${t.carsUnit}`}
             />
-            <ul className="w-full space-y-1.5">
-              {kassas.map((k, i) => {
-                const kFins = byKassa[k.id] ?? [];
-                const kTotals = totalsOf(kFins);
-                return (
-                  <Legend
-                    key={k.id}
-                    label={k.name}
-                    value={kTotals.totalRevenue}
-                    hint={`${kTotals.carCount} ${t.carsUnit}`}
-                    color={i === 0 ? brandBlue : brandBlueAccent}
-                  />
-                );
-              })}
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium tracking-tight text-zinc-700 dark:text-zinc-300 uppercase">
-              {t.byGroup}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <Donut
-              segments={allGroups.map((g) => {
-                const gFins = byGroup[g.id as GroupId] ?? [];
-                const gTotals = totalsOf(gFins);
-                return {
-                  key: g.id,
-                  label: g.name,
-                  value: gTotals.totalRevenue,
-                  color: toneHex[g.tone],
-                };
-              })}
-              centerTop={formatUzs(totals.totalRevenue)}
-              centerBottom={t.uzs}
-            />
-            <ul className="w-full space-y-1">
-              {allGroups.map((g) => {
-                const gFins = byGroup[g.id as GroupId] ?? [];
-                const gTotals = totalsOf(gFins);
-                return (
-                  <Legend
-                    key={g.id}
-                    label={g.name}
-                    value={gTotals.totalRevenue}
-                    hint={`${gTotals.carCount} ${t.carsUnit} · ${formatUzs(hourlyRateUzs[g.id])}/${t.hour}`}
-                    color={toneHex[g.tone]}
-                  />
-                );
-              })}
-            </ul>
           </CardContent>
         </Card>
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-medium tracking-tight text-zinc-700 dark:text-zinc-300 uppercase mb-3">
-          {periods.find((p) => p.id === period)?.label} — {t.spots}
-        </h2>
+        <SectionTitle>
+          {periods.find((p) => p.value === period)?.label} — {t.carsServed}
+        </SectionTitle>
         {periodFins.length === 0 ? (
-          <EmptyHint />
+          <EmptyState icon={<Inbox />}>{t.noHistory}</EmptyState>
         ) : (
           <RegistrationsTable fins={periodFins} />
         )}
       </section>
-    </div>
+    </PageShell>
+  );
+}
+
+function ChartCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm uppercase tracking-tight text-foreground/80">
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center gap-4">
+        {children}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -256,43 +320,33 @@ function BigStat({
   accent?: "primary" | "paid" | "pending";
 }) {
   return (
-    <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm">
+    <Card>
       <CardContent className="p-5">
-        <div className="text-[11px] uppercase tracking-wider text-zinc-500">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
           {label}
         </div>
         <div className="mt-2 flex items-baseline gap-1.5">
           <span
             className={cn(
-              "font-heading text-2xl font-semibold tabular-nums tracking-tight",
-              accent === "paid"
-                ? "text-blue-900 dark:text-blue-300"
-                : accent === "pending"
-                  ? "text-amber-700 dark:text-amber-400"
-                  : accent === "primary"
-                    ? "text-blue-900 dark:text-blue-300"
-                    : "text-zinc-900 dark:text-zinc-50"
+              "font-heading text-xl font-semibold tabular-nums tracking-tight sm:text-2xl",
+              accent === "pending"
+                ? "text-amber-600 dark:text-amber-400"
+                : accent === "paid" || accent === "primary"
+                  ? "text-primary"
+                  : "text-foreground"
             )}
           >
             {value}
           </span>
-          {unit && (
-            <span className="text-xs text-zinc-500 tracking-tight">{unit}</span>
-          )}
+          {unit && <span className="text-xs text-muted-foreground">{unit}</span>}
         </div>
         {hint && (
-          <div className="mt-1 text-xs text-zinc-500 tabular-nums">{hint}</div>
+          <div className="mt-1 text-xs tabular-nums text-muted-foreground">
+            {hint}
+          </div>
         )}
       </CardContent>
     </Card>
-  );
-}
-
-function EmptyHint() {
-  return (
-    <div className="rounded-md border border-dashed border-zinc-200 dark:border-zinc-800 px-4 py-6 text-center text-sm text-zinc-500">
-      —
-    </div>
   );
 }
 
@@ -310,17 +364,27 @@ function Legend({
   return (
     <li className="flex items-center gap-2 text-xs">
       <span
-        className="inline-block h-2 w-2 rounded-full shrink-0"
+        className="inline-block size-2 shrink-0 rounded-full"
         style={{ backgroundColor: color }}
       />
-      <span className="text-zinc-700 dark:text-zinc-300 font-medium">
-        {label}
-      </span>
-      {hint && <span className="text-zinc-500 truncate">{hint}</span>}
-      <span className="ml-auto tabular-nums font-medium text-zinc-900 dark:text-zinc-50">
+      <span className="font-medium text-foreground">{label}</span>
+      {hint && <span className="truncate text-muted-foreground">{hint}</span>}
+      <span className="ml-auto font-medium tabular-nums text-foreground">
         {formatUzs(value)}
       </span>
     </li>
+  );
+}
+
+function ChartLegend({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <span
+        className="size-2 rounded-full"
+        style={{ backgroundColor: color }}
+      />
+      {label}
+    </span>
   );
 }
 
@@ -329,54 +393,65 @@ function RegistrationsTable({ fins }: { fins: RegistrationFinance[] }) {
     (a, b) => b.registration.enteredAt - a.registration.enteredAt
   );
   return (
-    <div className="overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800">
-      <table className="w-full text-sm">
-        <thead className="bg-zinc-50 dark:bg-zinc-900/40">
-          <tr className="text-left text-xs uppercase tracking-wider text-zinc-500">
-            <th className="px-3 py-2 font-medium">{t.plate}</th>
-            <th className="px-3 py-2 font-medium">
+    <div className="overflow-x-auto rounded-xl ring-1 ring-foreground/10">
+      <table className="w-full min-w-[560px] text-sm">
+        <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
+          <tr>
+            <th className="px-3 py-2.5 font-medium">{t.plate}</th>
+            <th className="px-3 py-2.5 font-medium">
               {t.kassa} / {t.spot}
             </th>
-            <th className="px-3 py-2 font-medium">{t.group}</th>
-            <th className="px-3 py-2 font-medium text-right">{t.hour}</th>
-            <th className="px-3 py-2 font-medium text-right">{t.payment}</th>
-            <th className="px-3 py-2 font-medium text-right">{t.active}</th>
+            <th className="px-3 py-2.5 font-medium">{t.group}</th>
+            <th className="px-3 py-2.5 text-right font-medium">{t.hour}</th>
+            <th className="px-3 py-2.5 text-right font-medium">{t.payment}</th>
+            <th className="px-3 py-2.5 text-right font-medium">{t.status}</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+        <tbody className="divide-y divide-border">
           {sorted.map((f) => {
             const r = f.registration;
-            const kassaName = (r.spotKassaId === "kassa-1" ? "1-КАССА" : "2-КАССА");
+            const group = allGroups.find((g) => g.id === f.groupId);
+            const kassaName = r.spotKassaId === "kassa-1" ? "1-КАССА" : "2-КАССА";
             return (
               <tr key={r.id}>
-                <td className="px-3 py-2">
-                  <span className="font-mono uppercase tabular-nums tracking-wide text-zinc-900 dark:text-zinc-50">
+                <td className="px-3 py-2.5">
+                  <span className="font-mono uppercase tabular-nums tracking-wide text-foreground">
                     {r.plate}
                   </span>
                 </td>
-                <td className="px-3 py-2 tabular-nums">
+                <td className="px-3 py-2.5 tabular-nums">
                   {kassaName} · {r.spotNumber}
                 </td>
-                <td className="px-3 py-2">
-                  <GroupChip groupId={f.groupId} />
+                <td className="px-3 py-2.5">
+                  {group && (
+                    <span className="inline-flex items-center gap-1.5 text-xs">
+                      <span
+                        className={cn(
+                          "size-1.5 rounded-full",
+                          toneClasses[group.tone].dot
+                        )}
+                      />
+                      {group.name}
+                    </span>
+                  )}
                 </td>
-                <td className="px-3 py-2 text-right tabular-nums text-zinc-600 dark:text-zinc-400">
+                <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
                   {f.hours}
                 </td>
-                <td className="px-3 py-2 text-right tabular-nums font-medium text-zinc-900 dark:text-zinc-50">
+                <td className="px-3 py-2.5 text-right font-medium tabular-nums text-foreground">
                   {formatUzs(f.bill)} {t.uzs}
                 </td>
-                <td className="px-3 py-2 text-right">
+                <td className="px-3 py-2.5 text-right">
                   <Badge
                     variant="outline"
                     className={cn(
-                      "font-normal text-[11px]",
+                      "font-normal",
                       f.paid
-                        ? "border-emerald-200 text-emerald-700 dark:border-emerald-900/50 dark:text-emerald-300"
-                        : "border-amber-200 text-amber-700 dark:border-amber-900/50 dark:text-amber-300"
+                        ? "border-emerald-300 text-emerald-700 dark:border-emerald-900/50 dark:text-emerald-300"
+                        : "border-amber-300 text-amber-700 dark:border-amber-900/50 dark:text-amber-300"
                     )}
                   >
-                    {f.paid ? t.payment : t.active}
+                    {f.paid ? t.paid : t.active}
                   </Badge>
                 </td>
               </tr>
@@ -385,20 +460,5 @@ function RegistrationsTable({ fins }: { fins: RegistrationFinance[] }) {
         </tbody>
       </table>
     </div>
-  );
-}
-
-function GroupChip({ groupId }: { groupId: GroupId }) {
-  const group = market.sectors
-    .flatMap((s) => s.kassas)
-    .flatMap((k) => k.groups)
-    .find((g) => g.id === groupId);
-  if (!group) return null;
-  const c = toneClasses[group.tone];
-  return (
-    <span className="inline-flex items-center gap-1.5 text-xs">
-      <span className={cn("h-1.5 w-1.5 rounded-full", c.dot)} />
-      <span className="text-zinc-700 dark:text-zinc-300">{group.name}</span>
-    </span>
   );
 }

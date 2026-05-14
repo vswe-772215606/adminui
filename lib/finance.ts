@@ -1,11 +1,11 @@
-import { startOfDay, startOfWeek, startOfMonth } from "date-fns";
+import { startOfDay, startOfWeek, startOfMonth, subDays, format } from "date-fns";
 import {
   getKassa,
   getGroupForSpot,
   type GroupId,
   type KassaId,
 } from "@/data/market";
-import { calculateBill, chargedHours } from "@/lib/pricing";
+import { calculateBill, chargedHours, hourlyRateUzs, type Rates } from "@/lib/pricing";
 import type { Registration } from "@/lib/store";
 
 export type Period = "today" | "week" | "month" | "all";
@@ -36,7 +36,8 @@ export type RegistrationFinance = {
 
 export function computeFinance(
   registration: Registration,
-  now: number
+  now: number,
+  rates: Rates = hourlyRateUzs
 ): RegistrationFinance | null {
   const kassa = getKassa(registration.spotKassaId);
   if (!kassa) return null;
@@ -48,7 +49,7 @@ export function computeFinance(
     groupId: group.id,
     kassaId: kassa.id,
     hours: chargedHours(registration.enteredAt, refTime),
-    bill: calculateBill(group.id, registration.enteredAt, refTime),
+    bill: calculateBill(group.id, registration.enteredAt, refTime, rates),
     paid: registration.paid,
     refTime,
   };
@@ -104,6 +105,71 @@ export function totalsOf(fins: RegistrationFinance[]): Totals {
     totalHours,
     averageBill: fins.length > 0 ? Math.round(totalRevenue / fins.length) : 0,
   };
+}
+
+/* ---- Time-bucketed series for trend / peak-hour charts ---- */
+
+export type DayBucket = {
+  start: number;
+  label: string;
+  paid: number;
+  pending: number;
+  total: number;
+  count: number;
+};
+
+/**
+ * Revenue split into the last `days` calendar days (oldest → newest),
+ * bucketed by entry day — consistent with `inPeriod`.
+ */
+export function dailyBuckets(
+  fins: RegistrationFinance[],
+  days: number,
+  now: number
+): DayBucket[] {
+  const today = startOfDay(now).getTime();
+  const buckets: DayBucket[] = [];
+  const indexByStart = new Map<number, number>();
+  for (let i = days - 1; i >= 0; i--) {
+    const start = subDays(today, i).getTime();
+    indexByStart.set(start, buckets.length);
+    buckets.push({
+      start,
+      label: format(start, "dd.MM"),
+      paid: 0,
+      pending: 0,
+      total: 0,
+      count: 0,
+    });
+  }
+  for (const f of fins) {
+    const dayStart = startOfDay(f.registration.enteredAt).getTime();
+    const idx = indexByStart.get(dayStart);
+    if (idx === undefined) continue;
+    const b = buckets[idx];
+    b.total += f.bill;
+    b.count += 1;
+    if (f.paid) b.paid += f.bill;
+    else b.pending += f.bill;
+  }
+  return buckets;
+}
+
+export type HourBucket = { hour: number; count: number; revenue: number };
+
+/** Entries grouped by hour-of-day (0–23) — drives the peak-hours chart. */
+export function hourlyBuckets(fins: RegistrationFinance[]): HourBucket[] {
+  const buckets: HourBucket[] = Array.from({ length: 24 }, (_, hour) => ({
+    hour,
+    count: 0,
+    revenue: 0,
+  }));
+  for (const f of fins) {
+    const h = new Date(f.registration.enteredAt).getHours();
+    buckets[h].count += 1;
+    buckets[h].revenue += f.bill;
+  }
+  return buckets;
 }
 
 export function groupBy<K extends string>(

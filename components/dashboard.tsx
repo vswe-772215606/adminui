@@ -2,28 +2,48 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  ArrowDownRight,
+  LayoutGrid,
+  Inbox,
+  Wallet,
+} from "lucide-react";
 import { useNow } from "@/lib/use-now";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  PageShell,
+  PageHeader,
+  Stat,
+  StatGroup,
+  SectionTitle,
+  EmptyState,
+} from "@/components/layout/page-shell";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BarsChart } from "@/components/charts/bars-chart";
+import { Sparkline } from "@/components/charts/sparkline";
 import { getAllKassas, getGroupForSpot } from "@/data/market";
 import { useStore, getActive } from "@/lib/store";
+import { useRates } from "@/lib/settings-store";
+import {
+  computeFinance,
+  inPeriod,
+  totalsOf,
+  dailyBuckets,
+  type RegistrationFinance,
+} from "@/lib/finance";
 import { formatTimeShort, formatUzs } from "@/lib/format";
-import { calculateBill, hourlyRateUzs } from "@/lib/pricing";
+import { calculateBill } from "@/lib/pricing";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { toneClasses } from "@/lib/tones";
+import { toneClasses, brandBlue, brandBlueAccent } from "@/lib/tones";
 
 export function Dashboard() {
   const kassas = getAllKassas();
   const registrations = useStore((s) => s.registrations);
   const hasHydrated = useStore((s) => s.hasHydrated);
-
+  const rates = useRates();
   const now = useNow(60_000);
 
   const active = useMemo(
@@ -38,60 +58,96 @@ export function Dashboard() {
   }, [kassas, active]);
 
   const recent = useMemo(
-    () =>
-      [...active].sort((a, b) => b.enteredAt - a.enteredAt).slice(0, 10),
+    () => [...active].sort((a, b) => b.enteredAt - a.enteredAt).slice(0, 10),
     [active]
   );
 
-  return (
-    <div className="px-8 py-6 max-w-[1400px]">
-      <header className="flex items-end justify-between gap-6 pb-5 border-b border-zinc-200 dark:border-zinc-800">
-        <div>
-          <div className="text-xs uppercase tracking-wider text-zinc-500">
-            {t.dashboard}
-          </div>
-          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {t.marketName}
-          </h1>
-        </div>
-        <div className="flex items-center gap-5">
-          <Stat label={t.total} value={totals.total} />
-          <Stat label={t.free} value={totals.free} tone="free" />
-          <Stat label={t.occupied} value={totals.occupied} tone="occupied" />
-        </div>
-      </header>
+  const finance = useMemo(() => {
+    const fins = hasHydrated
+      ? registrations
+          .map((r) => computeFinance(r, now, rates))
+          .filter((f): f is RegistrationFinance => f !== null)
+      : [];
+    return {
+      today: totalsOf(fins.filter((f) => inPeriod(f, "today", now))),
+      week: dailyBuckets(fins, 7, now),
+    };
+  }, [registrations, hasHydrated, now, rates]);
 
-      <section className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-5">
+  const todayTotals = finance.today;
+  const week = finance.week;
+
+  return (
+    <PageShell>
+      <PageHeader
+        eyebrow={t.dashboard}
+        title={t.marketCity}
+        icon={<LayoutGrid />}
+        actions={
+          <StatGroup>
+            <Stat label={t.total} value={totals.total} size="md" />
+            <Stat label={t.free} value={totals.free} tone="free" size="md" />
+            <Stat
+              label={t.occupied}
+              value={totals.occupied}
+              tone="occupied"
+              size="md"
+            />
+          </StatGroup>
+        }
+      />
+
+      <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {kassas.map((k) => {
           const occupied = active.filter((r) => r.spotKassaId === k.id).length;
           const free = k.totalSpots - occupied;
-          const pct = (occupied / k.totalSpots) * 100;
+          const pct = k.totalSpots ? (occupied / k.totalSpots) * 100 : 0;
           return (
             <Link key={k.id} href={`/kassa/${k.id}`} className="group">
-              <Card className="border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors shadow-sm">
+              <Card className="transition-colors hover:ring-foreground/20">
                 <CardHeader className="flex flex-row items-start justify-between gap-4">
                   <div>
-                    <div className="text-[11px] uppercase tracking-wider text-zinc-500">
+                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
                       {t.kassa}
                     </div>
-                    <CardTitle className="mt-1 font-heading text-xl font-semibold tracking-tight">
-                      {k.name}
-                    </CardTitle>
+                    <CardTitle className="mt-0.5 text-lg">{k.name}</CardTitle>
                   </div>
-                  <ArrowRight
-                    className="h-4 w-4 text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition-colors"
-                    strokeWidth={1.5}
-                  />
+                  <ArrowRight className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-baseline gap-6">
-                    <Stat label={t.total} value={k.totalSpots} compact />
-                    <Stat label={t.free} value={free} tone="free" compact />
-                    <Stat label={t.occupied} value={occupied} tone="occupied" compact />
+                    <Stat
+                      label={t.total}
+                      value={k.totalSpots}
+                      size="sm"
+                      align="left"
+                    />
+                    <Stat
+                      label={t.free}
+                      value={free}
+                      tone="free"
+                      size="sm"
+                      align="left"
+                    />
+                    <Stat
+                      label={t.occupied}
+                      value={occupied}
+                      tone="occupied"
+                      size="sm"
+                      align="left"
+                    />
+                    <div className="ml-auto text-right">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {t.occupancy}
+                      </div>
+                      <div className="text-base font-semibold tabular-nums text-foreground">
+                        {Math.round(pct)}%
+                      </div>
+                    </div>
                   </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full bg-amber-400 dark:bg-amber-500"
+                      className="h-full rounded-full bg-primary transition-[width]"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -102,9 +158,11 @@ export function Dashboard() {
                         <Badge
                           key={g.id}
                           variant="outline"
-                          className="gap-1.5 border-zinc-200 dark:border-zinc-800 font-normal text-zinc-600 dark:text-zinc-400 text-[11px]"
+                          className="gap-1.5 font-normal text-muted-foreground"
                         >
-                          <span className={cn("h-1.5 w-1.5 rounded-full", c.dot)} />
+                          <span
+                            className={cn("size-1.5 rounded-full", c.dot)}
+                          />
                           {g.name}
                         </Badge>
                       );
@@ -117,92 +175,215 @@ export function Dashboard() {
         })}
       </section>
 
-      <section className="mt-10">
-        <h2 className="text-sm font-medium tracking-tight text-zinc-700 dark:text-zinc-300 mb-3">
-          {t.recentRegistrations}
-        </h2>
+      <section className="mt-8">
+        <SectionTitle
+          action={
+            <Link
+              href="/reports"
+              className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              {t.viewDetails}
+              <ArrowRight className="size-3.5" />
+            </Link>
+          }
+        >
+          <span className="flex items-center gap-2">
+            <Wallet className="size-4 text-muted-foreground" />
+            {t.financeReport} · {t.today}
+          </span>
+        </SectionTitle>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <FinanceStat
+            label={t.totalRevenue}
+            value={formatUzs(todayTotals.totalRevenue)}
+            accent="primary"
+            series={week.map((b) => b.total)}
+          />
+          <FinanceStat
+            label={t.paidRevenue}
+            value={formatUzs(todayTotals.paidRevenue)}
+            hint={`${todayTotals.paidCount} ${t.carsUnit}`}
+            accent="primary"
+            series={week.map((b) => b.paid)}
+          />
+          <FinanceStat
+            label={t.pendingRevenue}
+            value={formatUzs(todayTotals.pendingRevenue)}
+            hint={`${todayTotals.activeCount} ${t.carsUnit}`}
+            accent="pending"
+            series={week.map((b) => b.pending)}
+          />
+          <FinanceStat
+            label={t.carsServed}
+            value={String(todayTotals.carCount)}
+            hint={`${todayTotals.totalHours} ${t.hour}`}
+            series={week.map((b) => b.count)}
+          />
+        </div>
+
+        <Card className="mt-4">
+          <CardHeader className="flex flex-row items-center justify-between gap-3">
+            <CardTitle className="text-sm uppercase tracking-tight text-foreground/80">
+              {t.revenueTrend}
+              <span className="ml-1.5 font-sans text-xs font-normal normal-case tracking-normal text-muted-foreground">
+                {t.last7Days}
+              </span>
+            </CardTitle>
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+              <LegendDot color={brandBlue} label={t.paidRevenue} />
+              <LegendDot color={brandBlueAccent} label={t.pendingRevenue} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <BarsChart
+              height={150}
+              bars={week.map((b, i) => ({
+                label: b.label,
+                highlight: i === week.length - 1,
+                segments: [
+                  { key: "paid", value: b.paid, color: brandBlue },
+                  { key: "pending", value: b.pending, color: brandBlueAccent },
+                ],
+              }))}
+              formatTotal={(total) => `${formatUzs(total)} ${t.uzs}`}
+            />
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="mt-8">
+        <SectionTitle>{t.recentRegistrations}</SectionTitle>
         {recent.length === 0 ? (
-          <div className="rounded-md border border-dashed border-zinc-200 dark:border-zinc-800 px-4 py-8 text-center text-sm text-zinc-500">
-            {t.noActiveCars}
-          </div>
+          <EmptyState icon={<Inbox />}>{t.noActiveCars}</EmptyState>
         ) : (
-          <ul className="divide-y divide-zinc-200 dark:divide-zinc-800 rounded-md border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+          <ul className="divide-y divide-border overflow-hidden rounded-xl ring-1 ring-foreground/10">
             {recent.map((r) => {
               const kassa = kassas.find((k) => k.id === r.spotKassaId)!;
               const group = getGroupForSpot(kassa, r.spotNumber)!;
-              const bill = calculateBill(group.id, r.enteredAt, now);
+              const bill = calculateBill(group.id, r.enteredAt, now, rates);
               return (
-                <li
-                  key={r.id}
-                  className="flex items-center gap-4 px-4 py-2.5 text-sm"
-                >
-                  <span className="w-12 text-[11px] tabular-nums text-zinc-500">
-                    {formatTimeShort(r.enteredAt)}
-                  </span>
-                  <span className="font-mono uppercase tabular-nums tracking-wide text-zinc-900 dark:text-zinc-50">
-                    {r.plate}
-                  </span>
-                  <span className="text-zinc-600 dark:text-zinc-400 truncate">
-                    {r.owner}
-                  </span>
-                  <span className="ml-auto flex items-center gap-2 text-[11px] text-zinc-500">
-                    <Badge
-                      variant="outline"
-                      className="border-zinc-200 dark:border-zinc-800 font-normal tabular-nums"
-                    >
-                      {kassa.name} · {r.spotNumber}
-                    </Badge>
-                    <span className="hidden sm:inline tabular-nums">
-                      {formatUzs(bill)} {t.uzs}
+                <li key={r.id}>
+                  <Link
+                    href={`/cars/${r.id}`}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-muted/60 sm:gap-4"
+                  >
+                    <span className="w-10 shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                      {formatTimeShort(r.enteredAt)}
                     </span>
-                    <span className="hidden md:inline text-zinc-400 tabular-nums">
-                      ({formatUzs(hourlyRateUzs[group.id])}/{t.hour})
+                    <span className="w-24 shrink-0 font-mono uppercase tabular-nums tracking-wide text-foreground">
+                      {r.plate}
                     </span>
-                  </span>
+                    <span className="hidden truncate text-muted-foreground sm:block">
+                      {r.owner}
+                    </span>
+                    <span className="ml-auto flex shrink-0 items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className="font-normal tabular-nums text-muted-foreground"
+                      >
+                        {kassa.name} · {r.spotNumber}
+                      </Badge>
+                      <span className="w-20 text-right text-xs tabular-nums text-foreground">
+                        {formatUzs(bill)} {t.uzs}
+                      </span>
+                    </span>
+                  </Link>
                 </li>
               );
             })}
           </ul>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }
 
-function Stat({
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <span
+        className="size-2 rounded-full"
+        style={{ backgroundColor: color }}
+      />
+      {label}
+    </span>
+  );
+}
+
+function FinanceStat({
   label,
   value,
-  tone,
-  compact,
+  hint,
+  accent,
+  series,
 }: {
   label: string;
-  value: number;
-  tone?: "free" | "occupied";
-  compact?: boolean;
+  value: string;
+  hint?: string;
+  accent?: "primary" | "pending";
+  /** 7-day series for this metric, oldest → newest. */
+  series?: number[];
 }) {
+  const accentText =
+    accent === "primary"
+      ? "text-primary"
+      : accent === "pending"
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-muted-foreground";
+
+  const curr = series?.at(-1) ?? 0;
+  const prev = series?.at(-2) ?? 0;
+  const diff = curr - prev;
+  const pct = prev > 0 ? Math.round((diff / prev) * 100) : null;
+  const showDelta = prev > 0 && diff !== 0;
+
   return (
-    <div className={compact ? "" : "text-right"}>
-      <div
-        className={cn(
-          "uppercase tracking-wider text-zinc-500",
-          compact ? "text-[10px]" : "text-[11px]"
-        )}
-      >
-        {label}
-      </div>
-      <div
-        className={cn(
-          "tabular-nums font-semibold tracking-tight",
-          compact ? "text-base" : "text-xl",
-          tone === "free"
-            ? "text-emerald-700 dark:text-emerald-400"
-            : tone === "occupied"
-              ? "text-amber-700 dark:text-amber-400"
-              : "text-blue-900 dark:text-blue-300"
-        )}
-      >
-        {value}
-      </div>
-    </div>
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            {label}
+          </div>
+          {series && series.length > 1 && (
+            <Sparkline values={series} className={cn("shrink-0", accentText)} />
+          )}
+        </div>
+        <div
+          className={cn(
+            "mt-1.5 font-heading text-xl font-semibold tabular-nums tracking-tight sm:text-2xl",
+            accent ? accentText : "text-foreground"
+          )}
+        >
+          {value}
+        </div>
+        <div className="mt-1 flex items-center gap-1.5 text-xs">
+          {showDelta && (
+            <span
+              className={cn(
+                "flex items-center gap-0.5 font-medium tabular-nums",
+                diff >= 0
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-rose-600 dark:text-rose-400"
+              )}
+            >
+              {diff >= 0 ? (
+                <ArrowUpRight className="size-3" />
+              ) : (
+                <ArrowDownRight className="size-3" />
+              )}
+              {pct !== null ? `${Math.abs(pct)}%` : ""}
+            </span>
+          )}
+          {showDelta && (
+            <span className="text-muted-foreground">{t.vsYesterday}</span>
+          )}
+          {hint && (
+            <span className="ml-auto tabular-nums text-muted-foreground">
+              {hint}
+            </span>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

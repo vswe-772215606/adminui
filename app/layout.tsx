@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Manrope } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/sidebar";
+import { AppFrame } from "@/components/layout/app-frame";
 import { Hydration } from "@/components/hydration";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
@@ -23,7 +24,7 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: "Авто бозор — Бошқарув",
-  description: "Авто бозор кассаси учун бошқарув панели",
+  description: "Қўқон авто бозори кассаси учун бошқарув панели",
 };
 
 export default function RootLayout({
@@ -34,15 +35,20 @@ export default function RootLayout({
   return (
     <html
       lang="uz"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background text-foreground">
-        <Hydration />
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="flex-1 min-w-0">{children}</main>
-        </div>
-        <Toaster richColors position="top-right" />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Hydration />
+          <AppFrame>{children}</AppFrame>
+          <Toaster richColors position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   );
